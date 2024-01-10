@@ -4,7 +4,7 @@ import auth from '@react-native-firebase/auth';
 import firebase from '@react-native-firebase/app';
 import NavigationHeader from '../navigation/NavigationHeader';
 import database from '@react-native-firebase/database';
-
+import notifications from '../service/notifications';
 
 const firebaseConfig = {
   // Tu configuración de Firebase aquí
@@ -52,6 +52,7 @@ const FlatListScreen = ({ onLogout, navigation,route }) => {
             navigation.setParams({ refresh: false }); // Establece shouldRefresh en false
           }
           setRefreshData(false); // Establece refreshData en false
+          notifications();
         }
       
     },  [shouldRefresh, refreshData]); // El [] garantiza que esta función se ejecute solo una vez
