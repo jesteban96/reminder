@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view'
 import DateTimePicker from '@react-native-community/datetimepicker';
+import SelectDropdown from 'react-native-select-dropdown';
 import { format } from 'date-fns';
 import { useSaveClientLogic } from './useEditClientLogic'; // Importa la lógica
 
@@ -23,6 +24,15 @@ const AddClientScreen = ({ route, navigation }) => {
     isDatePickerVisibleM,
     selectedDateM,
   } = useSaveClientLogic({}, navigation); // Pasa datos iniciales vacíos
+
+  const days = [
+    { label: '0 días', value: 0 },
+    { label: '1 día', value: 1 },
+    { label: '2 días', value: 2 },
+    { label: '5 días', value: 5 },
+  ];
+
+  const [daysBeforeMaintenance, setDaysBeforeMaintenance] = useState(1);
 
   return (
     <KeyboardAwareScrollView>
@@ -108,6 +118,24 @@ const AddClientScreen = ({ route, navigation }) => {
           onChange={(event, dateM) => handleDateConfirmM(dateM)}
         />
       )}
+
+  <View style={styles.fieldContainer}>
+    <Text style={styles.label}>Días Previos a Mantenimiento (Notificación):</Text>
+    <SelectDropdown
+      style={styles.input}
+      data={days}
+      defaultValue={days[0]} // Establece el valor predeterminado al primer elemento del array
+      onSelect={(selectedItem, index) => {
+        const selectedValue = selectedItem.value;
+        setEditedClientData({ ...editedClientData, daysBeforeMaintenance: selectedValue });
+        setDaysBeforeMaintenance(selectedValue);
+      }}
+      buttonTextAfterSelection={(selectedItem, index) => {
+        return selectedItem.label; // Aseguramos que el texto mostrado sea la etiqueta (label)
+      }}
+      rowTextForSelection={(item, index) => item.label} // También aseguramos que el texto de cada opción sea la etiqueta (label)
+    />
+  </View>
 
       <View style={styles.fieldContainer}>
         <Text style={styles.label}>Número de Cuotas:</Text>

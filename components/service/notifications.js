@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import auth from '@react-native-firebase/auth';
 import firebase from '@react-native-firebase/app';
 import database from '@react-native-firebase/database';
