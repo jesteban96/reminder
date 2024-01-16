@@ -13,36 +13,52 @@ if (!firebase.apps.length) {
 
 const db = firebase.database();
 
-const { showInitialNotification,showNotification} = notificationService();
+const { showInitialNotification, showNotification } = notificationService();
 
-const notifications = () => {
-    
-        const ref = db.ref('Cliente'); // Reemplaza 'Cliente' con la ruta de tu nodo de datos
-          
-        ref.once('value')
-        .then(snapshot => {
-            if (snapshot.exists()) {
-            
+const notifications = async () => {
+    try {
+        const ref = db.ref('Cliente');
+
+        const snapshot = await ref.once('value');
+
+        if (snapshot.exists()) {
             const data = snapshot.val();
-            const clientsArray = Object.values(data); // Convierte los datos en un array
-                       
-            // Verificar las fechas de mantenimiento y mostrar notificaciones
-            const currentDate = new Date();
-            const formattedCurrentDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
+            const clientsArray = Object.values(data);
 
-            clientsArray.forEach(client => {
-                if (client.Fecha_Mantenimiento === formattedCurrentDate) {
-                const notificationMessage = `El cliente ${client.CLIENTE} tiene un mantenimiento hoy.`;
-                showNotification('Mantenimiento', notificationMessage);
+            clientsArray.forEach(async (client) => {
+                const daysBeforeMaintenance = client.daysBeforeMaintenance || 0;
+
+                // Obtener fecha de mantenimiento en formato mes/día/año
+                const maintenanceDateParts = client.Fecha_Mantenimiento.split('/');
+                const maintenanceDate = new Date(
+                    parseInt(maintenanceDateParts[2], 10), // Año
+                    parseInt(maintenanceDateParts[0], 10) - 1, // Mes (restar 1 porque los meses en JavaScript son de 0 a 11)
+                    parseInt(maintenanceDateParts[1], 10) // Día
+                );
+
+                // Calcular la fecha de notificación restando los días necesarios
+                const notificationDate = new Date(maintenanceDate);
+                notificationDate.setDate(maintenanceDate.getDate() - daysBeforeMaintenance);
+
+                const currentDate = new Date();
+                const formattedCurrentDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
+
+                // Verificar si hoy es la fecha de notificación
+                const formattedNotificationDate = `${notificationDate.getMonth() + 1}/${notificationDate.getDate()}/${notificationDate.getFullYear()}`;
+                
+                if (formattedCurrentDate === formattedNotificationDate) {
+                    const notificationMessage = `El cliente ${client.CLIENTE} tiene un mantenimiento programado para el ${client.Fecha_Mantenimiento}.`;
+
+                    // Mostrar notificación
+                    showNotification('Mantenimiento', notificationMessage);
                 }
             });
-            } else {
+        } else {
             console.log('No se encontraron datos.');
-            }
-        })
-        .catch(error => {
-            console.error('Error al obtener datos:', error);
-        });
-}
+        }
+    } catch (error) {
+        console.error('Error al obtener datos:', error);
+    }
+};
 
-export default notifications
+export default notifications;
