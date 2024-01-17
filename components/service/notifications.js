@@ -51,6 +51,26 @@ const notifications = async () => {
 
                     // Mostrar notificación
                     showNotification('Mantenimiento', notificationMessage);
+
+                    const currentDate = new Date();
+                    const formattedCurrentDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
+                
+                    // Guardar información en la base de datos
+                    const notificationData = {
+                        fechaGeneracion: formattedCurrentDate, // Usar la fecha actual en el formato correcto
+                        cliente: client.CLIENTE,
+                        telefono: client.CELULAR_DIRECCION,
+                        whatsapp: client.Telefono_WhatsApp,
+                        direccion: client.DETALLE,
+                        mensaje: notificationMessage,
+                    };
+                
+                    // Obtener una referencia al nodo de Notificaciones en la base de datos
+                    const notificationsRef = db.ref('Notificaciones');
+                
+                    // Agregar una nueva notificación con un identificador único
+                    const newNotificationRef = notificationsRef.push();
+                    await newNotificationRef.set(notificationData);
                 }
             });
         } else {
