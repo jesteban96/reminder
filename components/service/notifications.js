@@ -60,10 +60,12 @@ const notifications = async () => {
                         fechaGeneracion: formattedCurrentDate, // Usar la fecha actual en el formato correcto
                         titulo:"Mantenimiento",
                         cliente: client.CLIENTE,
-                        telefono: client.CELULAR_DIRECCION,
                         whatsapp: client.Telefono_WhatsApp,
-                        direccion: client.DETALLE,
+                        direccion: client.CELULAR_DIRECCION,
+                        tipo_filtro:client.TIPO_FILTRO,
                         mensaje: notificationMessage,
+                        leido:false,
+                        id:client.Id
                     };
                 
                     // Obtener una referencia al nodo de Notificaciones en la base de datos

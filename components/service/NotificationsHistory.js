@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet,TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/database';
 
-const NotificacionesHistorico = () => {
+const NotificacionesHistorico = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
+
+  const navigateToShowNotification = (clientData) => {
+    console.log("Data initial: ", clientData);
+    navigation.navigate('NotificationDetail', { clientData, refresh: true });
+  };
+
+  const compareDates = (a, b) => new Date(b.fechaGeneracion) - new Date(a.fechaGeneracion);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -16,7 +23,7 @@ const NotificacionesHistorico = () => {
           const notificationsArray = Object.values(data);
 
           // Ordenar las notificaciones por fecha (de más reciente a más antigua)
-          notificationsArray.sort((a, b) => b.fechaGeneracion.localeCompare(a.fechaGeneracion));
+          notificationsArray.sort(compareDates);
 
           // Agrupar las notificaciones por fecha
           const groupedNotifications = groupNotificationsByDate(notificationsArray);
@@ -40,7 +47,7 @@ const NotificacionesHistorico = () => {
 
     notificationsArray.forEach((notification) => {
       const dateKey = notification.fechaGeneracion.split('T')[0]; // Obtener la parte de la fecha (sin la hora)
-      
+
       if (!groupedNotifications[dateKey]) {
         groupedNotifications[dateKey] = [];
       }
@@ -52,10 +59,12 @@ const NotificacionesHistorico = () => {
   };
 
   const renderNotificationItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} key={item.id} /*onPress={() => navigateToEditClient(item)}*/>
-        <Text style={[styles.dateHeader,{ color: 'black' }]}>{item.titulo}</Text>
-        <Text style={[styles.filterType,{ color: 'black' }]}>{item.mensaje}</Text>
-        {/* Agrega más campos según sea necesario */}
+    <TouchableOpacity style={styles.card} onPress={() => navigateToShowNotification(item)}>
+      <Text key={item.id} style={[styles.dateHeader, { color: 'black' }]}>
+        {item.titulo}
+      </Text>
+      <Text style={[styles.filterType, { color: 'black' }]}>{item.mensaje}</Text>
+      {/* Agrega más campos según sea necesario */}
     </TouchableOpacity>
   );
 
@@ -80,26 +89,26 @@ const NotificacionesHistorico = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 16,
-    },
-    card: {
-      backgroundColor: '#fff',
-      padding: 16,
-      marginTop: 8,
-      marginBottom:8,
-      borderRadius: 8,
-      elevation: 4,
-    },
-    dateHeader: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginLeft:2,
-    },
-    filterType: {
-      fontSize: 16,
-    },
-  });
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 8,
+    borderRadius: 8,
+    elevation: 4,
+  },
+  dateHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 2,
+  },
+  filterType: {
+    fontSize: 16,
+  },
+});
 
 export default NotificacionesHistorico;

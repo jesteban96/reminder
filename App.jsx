@@ -8,6 +8,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AddClientScreen from './components/form/AddClientScreen'
 import NotificacionesHistorico from './components/service/NotificationsHistory'; 
+import NotificationDetail from './components/service/NotificationDetail';
 import firebaseMessaging from '@react-native-firebase/messaging';
 
 
@@ -97,6 +98,7 @@ class App extends Component {
           <Stack.Screen name="EditClient" component={EditClientScreen} options={{ title: 'Editar Clientes' }}/>
           <Stack.Screen name="AddClient" component={AddClientScreen} options={{ title: 'Crear Clientes' }}/>
           <Stack.Screen name="NotificacionesHistorico" component={NotificacionesHistorico} options={{ title: 'Historial de Notificaciones' }}/>
+          <Stack.Screen name="NotificationDetail" component={NotificationDetail} options={{ title: 'Detalles Notificación' }}/>
         </Stack.Navigator>
       </NavigationContainer>
     );
