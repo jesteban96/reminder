@@ -58,6 +58,7 @@ const notifications = async () => {
                     // Guardar información en la base de datos
                     const notificationData = {
                         fechaGeneracion: formattedCurrentDate, // Usar la fecha actual en el formato correcto
+                        titulo:"Mantenimiento",
                         cliente: client.CLIENTE,
                         telefono: client.CELULAR_DIRECCION,
                         whatsapp: client.Telefono_WhatsApp,

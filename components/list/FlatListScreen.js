@@ -5,6 +5,7 @@ import firebase from '@react-native-firebase/app';
 import NavigationHeader from '../navigation/NavigationHeader';
 import database from '@react-native-firebase/database';
 import notifications from '../service/notifications';
+import { FloatingAction } from 'react-native-floating-action';
 
 const firebaseConfig = {
   // Tu configuración de Firebase aquí
@@ -85,6 +86,21 @@ const FlatListScreen = ({ onLogout, navigation,route }) => {
     navigation.navigate('EditClient', { clientData, refresh: true });
   };
 
+  const actions = [
+    {
+      text: 'Ver Notificaciones',
+      icon: require('../../src/images/campanita.png'),
+      name: 'btnNotificaciones',
+      position: 2,
+    },
+  ];
+
+  const handleActionPress = (name) => {
+    if (name === 'btnNotificaciones') {
+      navigation.navigate('NotificacionesHistorico');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <NavigationHeader onSearch={handleSearch} onLogout={onLogout} />
@@ -92,6 +108,11 @@ const FlatListScreen = ({ onLogout, navigation,route }) => {
         data={filteredClients}
         renderItem={renderItem}
         keyExtractor={(item) => item.Id.toString()}
+      />
+      <FloatingAction
+        actions={actions}
+        onPressItem={(name) => handleActionPress(name)}
+        color="#FFD700" // Color amarillo para la campanita
       />
     </View>
   );
