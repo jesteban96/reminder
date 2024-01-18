@@ -26,21 +26,22 @@ const FlatListScreen = ({ onLogout, navigation,route }) => {
     const [refreshData, setRefreshData] = useState(true);
 
     useEffect(() => {
-      
       if (shouldRefresh || refreshData) {
         const ref = db.ref('Cliente'); // Reemplaza 'Cliente' con la ruta de tu nodo de datos
-        
+    
         ref.once('value')
           .then(snapshot => {
             if (snapshot.exists()) {
-              
               const data = snapshot.val();
-              const clientsArray = Object.values(data); // Convierte los datos en un array
-              
-              clientsArray.sort((a, b) => a.CLIENTE.localeCompare(b.CLIENTE));
-              
-              setClients(clientsArray);
-              setFilteredClients(clientsArray);
+              const clientsArray = Object.values(data);
+    
+              // Filtrar y ordenar clientes
+              const filteredAndSortedClients = clientsArray
+                .filter(client => client && client.CLIENTE)
+                .sort((a, b) => (a.CLIENTE && b.CLIENTE) ? a.CLIENTE.localeCompare(b.CLIENTE) : 0);
+    
+              setClients(filteredAndSortedClients);
+              setFilteredClients(filteredAndSortedClients);
             } else {
               console.log('No se encontraron datos.');
             }
@@ -48,15 +49,15 @@ const FlatListScreen = ({ onLogout, navigation,route }) => {
           .catch(error => {
             console.error('Error al obtener datos:', error);
           });
-
-          if (shouldRefresh) {
-            navigation.setParams({ refresh: false }); // Establece shouldRefresh en false
-          }
-          setRefreshData(false); // Establece refreshData en false
-          notifications();
+    
+        if (shouldRefresh) {
+          navigation.setParams({ refresh: false }); // Establece shouldRefresh en false
         }
-      
-    },  [shouldRefresh, refreshData]); // El [] garantiza que esta función se ejecute solo una vez
+        setRefreshData(false); // Establece refreshData en false
+        notifications();
+      }
+    
+    }, [shouldRefresh, refreshData]); // El [] garantiza que esta función se ejecute solo una vez    
 
     const handleSearch = (text) => {
       setSearchText(text); // Actualizamos el estado de búsqueda

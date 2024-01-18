@@ -7,7 +7,8 @@ const NotificacionesHistorico = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
 
   const navigateToShowNotification = async (clientData) => {
-    await markNotificationAsRead(clientData.id);
+    console.log("Data initial: ", clientData);
+    await markNotificationAsRead(clientData.id, clientData.id_cliente);
     navigation.navigate('NotificationDetail', { clientData, refresh: true });
   };
 
@@ -56,10 +57,10 @@ const NotificacionesHistorico = ({ navigation }) => {
     return groupedNotifications;
   };
 
-  const markNotificationAsRead = async (notificationId) => {
+  const markNotificationAsRead = async (notificationId, clientId) => {
     try {
       await firebase.database().ref(`Notificaciones/${notificationId}`).update({ leido: true });
-
+  
       // Actualizar el estado local al marcar como leída
       const updatedNotifications = { ...notifications };
       Object.keys(updatedNotifications).forEach((dateKey) => {
@@ -71,12 +72,24 @@ const NotificacionesHistorico = ({ navigation }) => {
         });
       });
       setNotifications(updatedNotifications);
+  
+      // Actualizar el campo "notificacionMantenimiento" en el nodo del cliente
+      await firebase.database().ref(`Cliente/${clientId}`).update({ notificacionMantenimiento: false });
     } catch (error) {
       console.error('Error al marcar la notificación como leída:', error);
     }
   };
 
-  const compareDates = (a, b) => new Date(b.fechaGeneracion) - new Date(a.fechaGeneracion);
+  const compareDates = (a, b) => {
+    const dateA = a.fechaGeneracion ? extractDate(a.fechaGeneracion) : 0;
+    const dateB = b.fechaGeneracion ? extractDate(b.fechaGeneracion) : 0;
+    return dateB - dateA;
+  };
+  
+  const extractDate = (isoDate) => {
+    const [month, day, year] = isoDate.split('T')[0].split('/').map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   const renderNotificationItem = ({ item }) => (
     <TouchableOpacity
@@ -85,7 +98,7 @@ const NotificacionesHistorico = ({ navigation }) => {
         { backgroundColor: item.leido ? '#fff' : '#C6E9FF' }, // Cambiar el color según leído o no leído
       ]}
       onPress={() => {
-        markNotificationAsRead(item.id);
+        markNotificationAsRead(item.id, item.id_cliente);
         navigateToShowNotification(item);
       }}
     >

@@ -29,7 +29,7 @@ const notifications = async () => {
                 const daysBeforeMaintenance = client.daysBeforeMaintenance || 0;
 
                 // Obtener fecha de mantenimiento en formato mes/día/año
-                const maintenanceDateParts = client.Fecha_Mantenimiento.split('/');
+                const maintenanceDateParts = client.Fecha_Mantenimiento ? client.Fecha_Mantenimiento.split('/') : '';
                 const maintenanceDate = new Date(
                     parseInt(maintenanceDateParts[2], 10), // Año
                     parseInt(maintenanceDateParts[0], 10) - 1, // Mes (restar 1 porque los meses en JavaScript son de 0 a 11)
@@ -46,7 +46,7 @@ const notifications = async () => {
                 // Verificar si hoy es la fecha de notificación
                 const formattedNotificationDate = `${notificationDate.getMonth() + 1}/${notificationDate.getDate()}/${notificationDate.getFullYear()}`;
                 
-                if (formattedCurrentDate === formattedNotificationDate) {
+                if (formattedCurrentDate === formattedNotificationDate && client.notificacionMantenimiento != false) {
                     const notificationMessage = `El cliente ${client.CLIENTE} tiene un mantenimiento programado para el ${client.Fecha_Mantenimiento}.`;
 
                     // Mostrar notificación
@@ -62,7 +62,8 @@ const notifications = async () => {
                         tipo_filtro:client.TIPO_FILTRO,
                         mensaje: notificationMessage,
                         leido: false,
-                        id: null // Dejarlo nulo por ahora
+                        id: null, // Dejarlo nulo por ahora
+                        id_cliente:client.Id
                     };
                 
                     // Obtener una referencia al nodo de Notificaciones en la base de datos
