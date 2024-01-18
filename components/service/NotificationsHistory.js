@@ -6,12 +6,10 @@ import '@react-native-firebase/database';
 const NotificacionesHistorico = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
 
-  const navigateToShowNotification = (clientData) => {
-    console.log("Data initial: ", clientData);
+  const navigateToShowNotification = async (clientData) => {
+    await markNotificationAsRead(clientData.id);
     navigation.navigate('NotificationDetail', { clientData, refresh: true });
   };
-
-  const compareDates = (a, b) => new Date(b.fechaGeneracion) - new Date(a.fechaGeneracion);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,8 +56,39 @@ const NotificacionesHistorico = ({ navigation }) => {
     return groupedNotifications;
   };
 
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      await firebase.database().ref(`Notificaciones/${notificationId}`).update({ leido: true });
+
+      // Actualizar el estado local al marcar como leída
+      const updatedNotifications = { ...notifications };
+      Object.keys(updatedNotifications).forEach((dateKey) => {
+        updatedNotifications[dateKey] = updatedNotifications[dateKey].map((notification) => {
+          if (notification.id === notificationId) {
+            return { ...notification, leido: true };
+          }
+          return notification;
+        });
+      });
+      setNotifications(updatedNotifications);
+    } catch (error) {
+      console.error('Error al marcar la notificación como leída:', error);
+    }
+  };
+
+  const compareDates = (a, b) => new Date(b.fechaGeneracion) - new Date(a.fechaGeneracion);
+
   const renderNotificationItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} onPress={() => navigateToShowNotification(item)}>
+    <TouchableOpacity
+      style={[
+        styles.card,
+        { backgroundColor: item.leido ? '#fff' : '#C6E9FF' }, // Cambiar el color según leído o no leído
+      ]}
+      onPress={() => {
+        markNotificationAsRead(item.id);
+        navigateToShowNotification(item);
+      }}
+    >
       <Text key={item.id} style={[styles.dateHeader, { color: 'black' }]}>
         {item.titulo}
       </Text>
@@ -94,7 +123,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
     padding: 16,
     marginTop: 8,
     marginBottom: 8,

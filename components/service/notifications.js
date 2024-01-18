@@ -52,9 +52,6 @@ const notifications = async () => {
                     // Mostrar notificación
                     showNotification('Mantenimiento', notificationMessage);
 
-                    const currentDate = new Date();
-                    const formattedCurrentDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
-                
                     // Guardar información en la base de datos
                     const notificationData = {
                         fechaGeneracion: formattedCurrentDate, // Usar la fecha actual en el formato correcto
@@ -64,8 +61,8 @@ const notifications = async () => {
                         direccion: client.CELULAR_DIRECCION,
                         tipo_filtro:client.TIPO_FILTRO,
                         mensaje: notificationMessage,
-                        leido:false,
-                        id:client.Id
+                        leido: false,
+                        id: null // Dejarlo nulo por ahora
                     };
                 
                     // Obtener una referencia al nodo de Notificaciones en la base de datos
@@ -73,6 +70,14 @@ const notifications = async () => {
                 
                     // Agregar una nueva notificación con un identificador único
                     const newNotificationRef = notificationsRef.push();
+
+                    // Obtener el ID asignado por Firebase
+                    const newNotificationId = newNotificationRef.key;
+
+                    // Actualizar el ID en la información de la notificación
+                    notificationData.id = newNotificationId;
+
+                    // Actualizar la notificación con el ID
                     await newNotificationRef.set(notificationData);
                 }
             });
