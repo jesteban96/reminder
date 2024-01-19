@@ -7,7 +7,6 @@ const NotificacionesHistorico = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
 
   const navigateToShowNotification = async (clientData) => {
-    console.log("Data initial: ", clientData);
     await markNotificationAsRead(clientData.id, clientData.id_cliente);
     navigation.navigate('NotificationDetail', { clientData, refresh: true });
   };
