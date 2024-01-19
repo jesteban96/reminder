@@ -16,7 +16,7 @@ export const validateFields = (editedClientData) => {
         return false;
     }
 
-    if (!editedClientData.TIPO_FILTRO) {
+    if (!editedClientData.TIPO_FILTRO || editedClientData.TIPO_FILTRO == "" || editedClientData.TIPO_FILTRO == undefined) {
         Alert.alert('Campo requerido', 'El campo Tipo Filtro es obligatorio.');
         return false;
     }

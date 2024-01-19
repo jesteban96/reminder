@@ -79,48 +79,73 @@ export const useSaveClientLogic = (initialClientData, navigation) => {
   }, [isFocused]);
 
   const saveChanges = async () => {
-    if (auth().currentUser) {
-      // Obtén el último ID numérico de la colección
-      if (validateFields(editedClientData)) {
-        const lastClientIdSnapshot = await database()
-          .ref('/Cliente')
-          .orderByKey()
-          .limitToLast(1)
-          .once('value');
-    
-        let lastClientId = 0;
-    
-        if (lastClientIdSnapshot.exists()) {
-          const lastClientIdData = lastClientIdSnapshot.val();
-          // Extrae el número del último ID
-          const lastClientIdString = Object.keys(lastClientIdData)[0];
-          lastClientId = parseInt(lastClientIdString, 10);
+    try {
+      if (auth().currentUser) {
+        if (validateFields(editedClientData)) {
+          const lastClientIdSnapshot = await database()
+            .ref('/Cliente')
+            .orderByKey()
+            .limitToLast(1)
+            .once('value');
+  
+          let lastClientId = 0;
+  
+          if (lastClientIdSnapshot.exists()) {
+            const lastClientIdData = lastClientIdSnapshot.val();
+            const lastClientIdString = Object.keys(lastClientIdData)[0];
+            lastClientId = parseInt(lastClientIdString, 10);
+          }
+  
+          const newClientId = lastClientId + 1;
+  
+          const updatedClientData = {
+            ...editedClientData,
+            Id: newClientId.toString(),
+            notificacionMantenimiento: true
+          };
+  
+          const cuotas = updatedClientData.Cuotas || 0;
+          const nextInstallmentDates = calculateNextInstallmentDates(formattedDate, cuotas);
+  
+          // Actualiza los datos del cliente con la información de la cuota
+          updatedClientData.proximaNotificacion = nextInstallmentDates.join(',');
+
+          
+  
+          // Usa el método update() para actualizar los datos existentes en lugar de set()
+          await database()
+            .ref(`/Cliente/${newClientId}`)
+            .update(updatedClientData);
+  
+          Alert.alert('Cambios guardados', 'Los cambios se guardaron exitosamente.');
+          navigation.navigate('FlatListScreen', { refresh: true });
         }
-    
-        // Incrementa el ID para el nuevo elemento
-        const newClientId = lastClientId + 1;
-    
-        // Actualiza el objeto con el nuevo ID antes de guardarlo
-        editedClientData.Id = newClientId.toString();
-    
-        // Guarda los datos en la ubicación del nuevo elemento
-        database()
-          .ref(`/Cliente/${newClientId}`)
-          .set(editedClientData)
-          .then(() => {
-            Alert.alert('Cambios guardados', 'Los cambios se guardaron exitosamente.');
-            navigation.navigate('FlatListScreen', { refresh: true });
-          })
-          .catch((error) => {
-            console.error('Error al guardar cambios:', error);
-            Alert.alert('Error', 'Hubo un error al guardar los cambios. Por favor, inténtalo de nuevo.');
-          });
-      } 
+      } else {
+        navigation.navigate('LoginScreen');
+        Alert.alert('Acceso denegado', 'Debes iniciar sesión para crear el cliente.');
+      }
+    } catch (error) {
+      console.error('Error al guardar cambios:', error);
+      Alert.alert('Error', 'Hubo un error al guardar los cambios. Por favor, inténtalo de nuevo.');
     }
-    else {
-      navigation.navigate('LoginScreen');
-      Alert.alert('Acceso denegado', 'Debes iniciar sesión para crear el cliente.');
+  };
+
+  const calculateNextInstallmentDates = (startDate, cuotas) => {
+    const nextInstallmentDates = [];
+    const currentDate = new Date(startDate);
+  
+    for (let i = 0; i < cuotas; i++) {
+      // Calcula la fecha del próximo mes
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      
+      // Formatea la fecha como MM/DD/YYYY
+      const formattedDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
+      console.log("formattedDate: "+formattedDate)
+      nextInstallmentDates.push(formattedDate);
     }
+    console.log("proxima fecha: "+nextInstallmentDates)
+    return nextInstallmentDates;
+    
   };
   
   

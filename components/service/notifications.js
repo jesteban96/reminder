@@ -18,7 +18,6 @@ const { showInitialNotification, showNotification } = notificationService();
 const notifications = async () => {
     try {
         const ref = db.ref('Cliente');
-
         const snapshot = await ref.once('value');
 
         if (snapshot.exists()) {
@@ -26,60 +25,100 @@ const notifications = async () => {
             const clientsArray = Object.values(data);
 
             clientsArray.forEach(async (client) => {
-                const daysBeforeMaintenance = client.daysBeforeMaintenance || 0;
+                try {
+                    // Lógica para notificaciones de mantenimiento
+                    let daysBeforeMaintenance = 0;
+                    let maintenanceDateParts = '';
+                    try {
+                        daysBeforeMaintenance = client.daysBeforeMaintenance || 0;
+                        maintenanceDateParts = client.Fecha_Mantenimiento ? client.Fecha_Mantenimiento.split('/') : '';
+                    } catch {
+                        daysBeforeMaintenance = 0;
+                        maintenanceDateParts = '';
+                    }
 
-                // Obtener fecha de mantenimiento en formato mes/día/año
-                const maintenanceDateParts = client.Fecha_Mantenimiento ? client.Fecha_Mantenimiento.split('/') : '';
-                const maintenanceDate = new Date(
-                    parseInt(maintenanceDateParts[2], 10), // Año
-                    parseInt(maintenanceDateParts[0], 10) - 1, // Mes (restar 1 porque los meses en JavaScript son de 0 a 11)
-                    parseInt(maintenanceDateParts[1], 10) // Día
-                );
+                    const maintenanceDate = new Date(
+                        parseInt(maintenanceDateParts[2], 10),
+                        parseInt(maintenanceDateParts[0], 10) - 1,
+                        parseInt(maintenanceDateParts[1], 10)
+                    );
 
-                // Calcular la fecha de notificación restando los días necesarios
-                const notificationDate = new Date(maintenanceDate);
-                notificationDate.setDate(maintenanceDate.getDate() - daysBeforeMaintenance);
+                    const notificationDate = new Date(maintenanceDate);
+                    notificationDate.setDate(maintenanceDate.getDate() - daysBeforeMaintenance);
 
-                const currentDate = new Date();
-                const formattedCurrentDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
+                    const currentDate = new Date();
+                    const formattedCurrentDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
+                    const formattedNotificationDate = `${notificationDate.getMonth() + 1}/${notificationDate.getDate()}/${notificationDate.getFullYear()}`;
 
-                // Verificar si hoy es la fecha de notificación
-                const formattedNotificationDate = `${notificationDate.getMonth() + 1}/${notificationDate.getDate()}/${notificationDate.getFullYear()}`;
-                
-                if (formattedCurrentDate === formattedNotificationDate && client.notificacionMantenimiento != false) {
-                    const notificationMessage = `El cliente ${client.CLIENTE} tiene un mantenimiento programado para el ${client.Fecha_Mantenimiento}.`;
+                    if (formattedCurrentDate === formattedNotificationDate && client.notificacionMantenimiento !== false) {
+                        const maintenanceNotificationMessage = `El cliente ${client.CLIENTE} tiene un mantenimiento programado para el ${client.Fecha_Mantenimiento}.`;
+                        showNotification('Mantenimiento', maintenanceNotificationMessage);
 
-                    // Mostrar notificación
-                    showNotification('Mantenimiento', notificationMessage);
+                        const maintenanceNotificationData = {
+                            fechaGeneracion: formattedCurrentDate,
+                            titulo: "Mantenimiento",
+                            cliente: client.CLIENTE,
+                            whatsapp: client.Telefono_WhatsApp,
+                            direccion: client.CELULAR_DIRECCION,
+                            tipo_filtro: client.TIPO_FILTRO,
+                            mensaje: maintenanceNotificationMessage,
+                            leido: false,
+                            id: null,
+                            id_cliente: client.Id
+                        };
 
-                    // Guardar información en la base de datos
-                    const notificationData = {
-                        fechaGeneracion: formattedCurrentDate, // Usar la fecha actual en el formato correcto
-                        titulo:"Mantenimiento",
-                        cliente: client.CLIENTE,
-                        whatsapp: client.Telefono_WhatsApp,
-                        direccion: client.CELULAR_DIRECCION,
-                        tipo_filtro:client.TIPO_FILTRO,
-                        mensaje: notificationMessage,
-                        leido: false,
-                        id: null, // Dejarlo nulo por ahora
-                        id_cliente:client.Id
-                    };
-                
-                    // Obtener una referencia al nodo de Notificaciones en la base de datos
-                    const notificationsRef = db.ref('Notificaciones');
-                
-                    // Agregar una nueva notificación con un identificador único
-                    const newNotificationRef = notificationsRef.push();
+                        const maintenanceNotificationsRef = db.ref('Notificaciones');
+                        const newMaintenanceNotificationRef = maintenanceNotificationsRef.push();
+                        const newMaintenanceNotificationId = newMaintenanceNotificationRef.key;
+                        maintenanceNotificationData.id = newMaintenanceNotificationId;
 
-                    // Obtener el ID asignado por Firebase
-                    const newNotificationId = newNotificationRef.key;
+                        await newMaintenanceNotificationRef.set(maintenanceNotificationData);
+                    }
 
-                    // Actualizar el ID en la información de la notificación
-                    notificationData.id = newNotificationId;
+                    // Lógica para notificaciones de cobros
+                    let cuotas = 0;
+                    let nextInstallmentDates =  [];
+                    try{
+                        cuotas = client.Cuotas || 0;
+                        nextInstallmentDates = client.proximaNotificacion ? client.proximaNotificacion.split(',') : [];
+                    }
+                    catch{
+                        cuotas =  0;
+                        nextInstallmentDates = [];
+                    }
+                    
 
-                    // Actualizar la notificación con el ID
-                    await newNotificationRef.set(notificationData);
+                    if (cuotas >= 2 && nextInstallmentDates.length > 0) {
+                        if (nextInstallmentDates.includes(formattedCurrentDate) && client.notificacionCobro !== false) {
+                            const installmentNotificationMessage = `El cliente ${client.CLIENTE} tiene un cobro programado para hoy.`;
+                            showNotification('Cobros', installmentNotificationMessage);
+
+                            const updatedInstallmentDates = nextInstallmentDates.filter(date => date !== formattedCurrentDate);
+                            await database().ref(`/Cliente/${client.Id}`).update({ proximaNotificacion: updatedInstallmentDates.join(',') });
+
+                            const installmentNotificationData = {
+                                fechaGeneracion: formattedCurrentDate,
+                                titulo: "Cobros",
+                                cliente: client.CLIENTE,
+                                whatsapp: client.Telefono_WhatsApp,
+                                direccion: client.CELULAR_DIRECCION,
+                                tipo_filtro: client.TIPO_FILTRO,
+                                mensaje: installmentNotificationMessage,
+                                leido: false,
+                                id: null,
+                                id_cliente: client.Id
+                            };
+
+                            const installmentNotificationsRef = db.ref('Notificaciones');
+                            const newInstallmentNotificationRef = installmentNotificationsRef.push();
+                            const newInstallmentNotificationId = newInstallmentNotificationRef.key;
+                            installmentNotificationData.id = newInstallmentNotificationId;
+
+                            await newInstallmentNotificationRef.set(installmentNotificationData);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al procesar cliente:', error);
                 }
             });
         } else {
