@@ -140,10 +140,9 @@ export const useSaveClientLogic = (initialClientData, navigation) => {
       
       // Formatea la fecha como MM/DD/YYYY
       const formattedDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear()}`;
-      console.log("formattedDate: "+formattedDate)
+  
       nextInstallmentDates.push(formattedDate);
     }
-    console.log("proxima fecha: "+nextInstallmentDates)
     return nextInstallmentDates;
     
   };

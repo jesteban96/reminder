@@ -117,6 +117,7 @@ const notifications = async () => {
                             await newInstallmentNotificationRef.set(installmentNotificationData);
                         }
                     }
+
                 } catch (error) {
                     console.error('Error al procesar cliente:', error);
                 }

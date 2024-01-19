@@ -64,12 +64,22 @@ export const useEditClientLogic = (route, navigation) => {
     }
   };
 
+  const handleDateConfirmCommonM = (date, field) => {
+    hideDatePickerM();
+    if (date && !isNaN(date)) {
+      const formattedDateString = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+      setEditedClientData({ ...editedClientData, [field]: formattedDateString });
+    } else {
+      Alert.alert('Fecha no válida', 'Selecciona una fecha válida.');
+    }
+  };
+
   const handleDateConfirm = (date) => {
     handleDateConfirmCommon(date, 'FECHA_INSTALACION');
   };
 
   const handleDateConfirmM = (dateM) => {
-    handleDateConfirmCommon(dateM, 'Fecha_Mantenimiento');
+    handleDateConfirmCommonM(dateM, 'Fecha_Mantenimiento');
   };
 
   useEffect(() => {

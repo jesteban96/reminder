@@ -6,7 +6,7 @@ const NotificationDetail = ({ route }) => {
 
   const sendNotificationWhatsApp = async (Telefono_WhatsApp, notificationMessage) => {
     if (Telefono_WhatsApp && Telefono_WhatsApp !== '' && Telefono_WhatsApp !== undefined && Telefono_WhatsApp !== null) {
-      const phoneNumber = Telefono_WhatsApp;
+      const phoneNumber = '+57'+Telefono_WhatsApp;
       const message = notificationMessage;
       const url = `whatsapp://send?phone=${phoneNumber}&text=${message}`;
       await Linking.openURL(url);
